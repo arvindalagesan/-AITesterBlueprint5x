@@ -1,0 +1,28 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+
+# Environment variables and credentials
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Debugging and temporary files
+*.log
+.DS_Store
+
