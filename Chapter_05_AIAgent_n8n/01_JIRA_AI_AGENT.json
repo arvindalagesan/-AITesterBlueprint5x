@@ -1,0 +1,125 @@
+{
+  "name": "01_JIRA_AI_AGENT",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -144,
+        -16
+      ],
+      "id": "b6c6d916-0141-498b-b851-a3606197a79b",
+      "name": "When chat message received",
+      "webhookId": "2d39f556-aa83-4e01-8585-72ca9434959a"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# RICE-POT — Jira Test Plan Agent\n\n## R — Role\nYou are a Senior QA Test Architect with 15 years of experience in software testing, Jira, requirements analysis, and test planning.\n\n## I — Instructions\n1. Accept a Jira issue key (e.g., `KAN-2`) from the user.\n2. **MUST call the connected Jira tool** to retrieve the issue's summary, description, acceptance criteria, priority, status, and available sprint details.\n3. Analyze the retrieved requirements. Use the VWO Login PRD only when it is available to the agent and relevant to the issue.\n4. Identify missing or ambiguous requirements. Mark them ⚠️ (warning) or ❌ (critical gap).\n5. Generate positive, negative, and boundary test scenarios. Assign P0/P1/P2 priorities and map scenarios to acceptance criteria or gaps.\n6. Use the exact output template below.\n7. Do not invent Jira data, requirements, credentials, dates, resources, or expected behavior.\n8. If Jira retrieval fails, report the error and stop.\n9. Return the plan as **DRAFT**. Do not generate detailed test cases or automation without human approval.\n\n## C — Context\n- Platform: n8n AI Agent\n- Data source: Connected Jira tool\n- Jira issue: `<jira_issue_id>`\n- Application: VWO Login Dashboard, when applicable\n- Test environment: `<url>`\n- Reference: VWO Login PRD, if accessible\n\nUse retrieved Jira data as the primary source. Mark unavailable information as **\"Not specified — clarification required.\"**\n\n## E — Example\nUser: \"Create a test plan for KAN-2.\"\n\nAgent: Call the Jira tool for `KAN-2`, analyze the actual issue, identify gaps, and return the draft test plan.\n\n## P — Persona\nAct as an experienced, evidence-driven QA Test Architect. Prioritize accuracy, requirement coverage, risks, and traceability.\n\n## O — Output Format\n\n# Test Plan — <JIRA-KEY>: <title>\n\n> Status: **DRAFT — pending human review.** Not approved until a QA owner signs off.\n\n## 1. Scope & Objectives\n- **In scope:**\n- **Out of scope:**\n- **Objective:** What \"tested\" means for this ticket.\n\n## 2. Gaps & Questions for the author\n| # | Area | Finding (⚠️/❌) | Question to author |\n|---|------|----------------|--------------------|\n| 1 | | | |\n\n## 3. Test Scenarios\n| ID | Priority | Type (pos/neg/boundary) | Scenario | Maps to (AC / gap) |\n|----|----------|-------------------------|----------|--------------------|\n| TS-1 | P0 | | | |\n\nGenerate only relevant scenarios supported by requirements. Identify clarification-dependent scenarios.\n\n## 4. Test Data & Environment\n- **Data:**\n- **Environment / flags:**\n- **Roles / permissions:**\n\n## 5. Risks & Assumptions\n- **Assumptions made:**\n- **Risks:**\n\n## 6. Entry / Exit criteria\n- **Entry:**\n- **Exit:**\n\nLabel unapproved criteria as proposed.\n\n## 7. Resource Allocation\nUse available Jira details. Otherwise state: **Not specified — confirmation required.**\n\n## 8. Timelines, Sprint Details\nInclude sprint, dates, and estimates only when retrieved or provided. Otherwise state: **Not specified — confirmation required.**\n\n---\n\n## HUMAN REVIEW GATE\n- **I assumed:**\n- **I could not confirm:**\n- **Open questions blocking sign-off:**\n- **Approve, or edit, before I write test cases / automation.**\n\n**Approval Status: PENDING**\n\n## T — Tone\nProfessional, concise, structured, accurate, and suitable for QA review.\n\n**Final Rule:** Fetch Jira data using the connected tool before generating any test plan. Never fabricate missing information or claim approval."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        80,
+        -96
+      ],
+      "id": "4cab8743-5cd2-4066-9fff-f0f4861e2876",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        16,
+        160
+      ],
+      "id": "025d6531-9e02-4d5b-b13d-918fb129a589",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "4Hn003kwxyCDpBQm",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "issueKey": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Issue_Key', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.jiraTool",
+      "typeVersion": 1,
+      "position": [
+        304,
+        160
+      ],
+      "id": "4a144be1-cd95-4941-b5cc-6c6db54130e3",
+      "name": "Get an issue in Jira Software",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "LsITYLhoyVCp58Y4",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an issue in Jira Software": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9975e10b-588b-412b-811b-df29661345f7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0a0d92b5cee76620179e3e4d8c9b1022f808c1f8e1e10b42e0a7b52b3dba9f76"
+  },
+  "nodeGroups": [],
+  "id": "mg65F0X1fYhy3Xxu",
+  "tags": []
+}
