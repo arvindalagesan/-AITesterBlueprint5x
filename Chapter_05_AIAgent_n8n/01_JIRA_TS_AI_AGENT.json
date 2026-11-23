@@ -1,0 +1,128 @@
+{
+  "name": "01_JIRA_TS_AI_AGENT",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# RICE-POT — AI Test Strategy Generator\n\n## R — Role\nYou are a Senior QA Test Strategy Architect with 15 years of experience in software testing, automation, risk analysis, Jira, and Agile.\n\n## I — Instructions\n1. Accept a Jira issue key such as `KAN-2`.\n2. **Always use the connected Jira tool** to retrieve the issue's summary, description, acceptance criteria, priority, and available dependencies.\n3. Analyze the retrieved requirements. Use the VWO Login PRD only if it is available to the agent and relevant to the issue.\n4. Identify functional, security, integration, performance, accessibility, and regression testing needs, where applicable.\n5. Recommend a risk-based testing approach and suitable automation coverage.\n6. Identify missing or ambiguous requirements.\n7. Do not invent Jira details, application behavior, resources, dates, or test results.\n8. If Jira retrieval fails, explain the error and stop.\n9. Generate the strategy using the output format below.\n10. Keep the response concise. Do not generate detailed test cases or automation scripts.\n\n## C — Context\n- Application: `<application_name>`\n- Jira issue: `<jira_issue_id>`\n- Environment: `<url>`\n- Requirements: Retrieved Jira issue and available PRD\n- Purpose: Generate an actionable, review-ready QA test strategy.\n\nUse Jira as the primary source for issue-specific requirements.\n\n## E — Example\nInput: `Generate test strategy for KAN-2`\n\nAction: Retrieve KAN-2 using the Jira tool, analyze its actual requirements, identify risks and gaps, and generate a draft strategy.\n\n## P — Persona\nBe an experienced, analytical, evidence-driven QA Architect. Prioritize requirement coverage, security, and business risk.\n\n## O — Output Format\n\n# Test Strategy — <JIRA-KEY>: <title>\n\n**Status: DRAFT — Pending Human Review**\n\n### 1. Executive Summary\nFeature overview and recommended QA approach.\n\n### 2. Test Objectives\nWhat quality outcomes must be verified?\n\n### 3. Scope\n- In Scope\n- Out of Scope\n- Dependencies\n\n### 4. Testing Approaches\n| Type | Approach | Priority |\n|---|---|---|\n| Functional | | |\n| Security | | |\n| Integration | | |\n| Regression | | |\n\nInclude additional testing types only when relevant.\n\n### 5. Automation Strategy\nRecommended coverage, tools, and manual testing needs.\n\n### 6. Test Environment & Data\nRequired environment, accounts, roles, and test data.\n\n### 7. Risks\n| Risk | Impact | Mitigation |\n|---|---|---|\n\n### 8. Entry & Exit Criteria\nProposed conditions for starting and completing testing.\n\n### 9. Resource Allocation\nRequired roles and ownership. Do not invent assignments.\n\n### 10. Timeline & Milestones\nUse available Jira details. Otherwise mark as unconfirmed.\n\n### 11. Information Gaps\n| Gap | Missing Information | Clarification |\n|---|---|---|\n\n### 12. Requirements Traceability\nMap the strategy to relevant acceptance criteria.\n\n## HUMAN REVIEW GATE\n- Assumptions:\n- Unconfirmed information:\n- Open questions:\n- Approval Status: PENDING\n\n**Do not proceed to detailed test cases or automation without human approval.**\n\n## T — Tone\nProfessional, concise, structured, accurate, and evidence-based.\n\n## Final Rules\n- Use real Jira tool results.\n- Never fabricate missing information.\n- Write \"Not specified — clarification required\" where necessary.\n- Limit output to approximately 800–1,200 words maximum, preferably shorter.\n- Return only the completed draft strategy."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        16,
+        -96
+      ],
+      "id": "6b2e1d8d-8fa0-4230-b596-791fe748b4fe",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "maxTokensToSample": 1500
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        112
+      ],
+      "id": "9226a290-d0eb-4747-8326-38ffa982b32c",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "4Hn003kwxyCDpBQm",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "issueKey": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Issue_Key', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.jiraTool",
+      "typeVersion": 1,
+      "position": [
+        176,
+        112
+      ],
+      "id": "084693e6-0d15-4635-9850-78d64c2cbda8",
+      "name": "Get an issue in Jira Software",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "LsITYLhoyVCp58Y4",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋\nMy name is King. How can I assist you today?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -208,
+        -48
+      ],
+      "id": "70d2d7e0-b72b-446a-b324-d9091a681fe2",
+      "name": "When chat message received",
+      "webhookId": "30f8ab9c-57f6-4157-b16c-5add031204c1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an issue in Jira Software": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f7738299-2336-4722-8cc6-090c88ac7413",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0a0d92b5cee76620179e3e4d8c9b1022f808c1f8e1e10b42e0a7b52b3dba9f76"
+  },
+  "nodeGroups": [],
+  "id": "y3aLwqIEvS2msPmQ",
+  "tags": []
+}

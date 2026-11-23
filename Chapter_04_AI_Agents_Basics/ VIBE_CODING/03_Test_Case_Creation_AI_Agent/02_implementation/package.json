@@ -1,0 +1,1 @@
+{"name":"ai-test-case-generator","private":true,"type":"module","scripts":{"dev":"concurrently \"node src/backend/server.js\" \"vite --host 0.0.0.0 --port 5175\"","build":"vite build"},"dependencies":{"@vitejs/plugin-react":"latest","concurrently":"latest","vite":"latest","react":"latest","react-dom":"latest"}}

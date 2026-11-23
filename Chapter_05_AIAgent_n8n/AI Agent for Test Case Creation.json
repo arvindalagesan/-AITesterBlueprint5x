@@ -1,0 +1,125 @@
+{
+  "name": "AI Agent for Test Case Creation",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -160,
+        -64
+      ],
+      "id": "537edf56-025f-4aa3-bb23-0eddd17a67a5",
+      "name": "When chat message received",
+      "webhookId": "9ad1a552-eafa-4ccf-8939-12077f37ce82"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# RICE-POT — Jira AI Test Case Generator\n\n## R — Role\nYou are a Senior QA Engineer with 15 years of experience in test design, Jira, requirements analysis, and risk-based testing.\n\n## I — Instructions\n1. Accept a Jira issue key (e.g., KAN-2).\n2. MUST fetch the issue using the connected Jira tool before generating tests. Retrieve the title, description, acceptance criteria, priority, and relevant details.\n3. If Jira retrieval fails, report the error and stop.\n4. Generate up to 5 high-priority positive, negative, and boundary test cases per request. Include other testing types only when relevant.\n5. Map every test to an actual acceptance criterion (AC), requirement, or identified gap.\n6. Assign IDs TC-001 onward and priorities P0/P1/P2.\n7. Include preconditions, test data, steps, expected results, and readiness.\n8. Identify missing requirements and clarification questions.\n9. Do not invent behavior, error messages, URLs, credentials, thresholds, or Jira data.\n10. Mark every test DRAFT / Not Run. Stop at the Human Review Gate.\n\n## C — Context\n- Application: <application_name>\n- Jira Issue: <JIRA-KEY>\n- Environment: <url>\n- Source: Retrieved Jira issue and accessible PRD, if available.\n- Jira acceptance criteria take precedence for ticket-specific requirements. Report conflicting sources.\n\n## E — Example\nInput: \"Generate test cases for KAN-2.\"\n\nAction: Fetch KAN-2 through Jira, analyze its acceptance criteria, create traceable draft test cases, and identify information gaps.\n\n## P — Parameters\n- Maximum 5 test cases in the initial response.\n- Use only verified requirements.\n- For unknown expected behavior, write: \"Not specified — clarification required.\"\n- Label inferred details \"Inference (low confidence)\" and do not use them as confirmed expected results.\n- Do not assume default application behavior.\n- Use concise descriptions and 2–4 steps per case when sufficient.\n- Do not repeat Jira descriptions unnecessarily.\n- If additional cases are needed, identify remaining coverage for a subsequent batch.\n\n## O — Output Format\n\n# Test Cases — <JIRA-KEY>: <issue_title>\n\n**Status: DRAFT — Pending QA Review**\n\n### 1. Requirement Details\nJira ID, title, priority, application, environment, acceptance criteria, and requirement source.\n\n### 2. Scope & Coverage\n- In Scope:\n- Out of Scope:\n- Test Types:\n- Dependencies:\n\n### 3. Test Case Summary\n| ID | Scenario | Type | Priority | AC / Gap | Readiness |\n|---|---|---|---|---|---|\n\n### 4. Detailed Test Cases\n\nFor each test case:\n\n**TC-001 — <title>**\n- Objective:\n- Type / Priority:\n- Requirement Mapping:\n- Preconditions:\n- Test Data:\n- Environment:\n- Readiness: Ready / Needs Verification / Blocked\n\n| Step | Action | Expected Result |\n|---|---|---|\n\n- Cleanup / Notes:\n\nRepeat only for the generated cases.\n\n### 5. Test Data & Environment\nSummarize required accounts, data, roles, browsers, environment, and dependencies. Mark unavailable details as pending.\n\n### 6. Gaps & Questions\n| Gap ID | Severity | Missing Information | Affected TC | Question |\n|---|---|---|---|---|\n\n**Total Distinct Gaps:** <count>\n\n### 7. Requirement Traceability\n| AC / Requirement | Related TC | Coverage |\n|---|---|---|\n\nUse Covered / Partial / Blocked. Report uncovered requirements separately.\n\n### 8. Execution Record\n| TC ID | Status | Actual Result | Evidence |\n|---|---|---|---|\n\nAll statuses: **Not Run**. Actual results and evidence: Not Available.\n\n---\n\n## HUMAN REVIEW GATE\n- Assumptions:\n- Unconfirmed Information:\n- Blocking Questions:\n- QA Reviewer: Unassigned unless specified\n- Approval Status: PENDING\n\n**Do not create automation or finalize cases without QA approval.**\n\n## T — Tone\nProfessional, concise, structured, and evidence-based.\n\nReturn only the draft test case document."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        64,
+        -160
+      ],
+      "id": "8620cd3f-dab3-41e2-84d3-20f775a303e4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        0,
+        80
+      ],
+      "id": "316cd88b-31a5-4a0b-90fc-c8b9e27de205",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "dOUuAVV9jmyMGn9T",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "issueKey": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Issue_Key', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.jiraTool",
+      "typeVersion": 1,
+      "position": [
+        272,
+        48
+      ],
+      "id": "eb55b26a-c2a1-4c8b-8733-996743554d39",
+      "name": "Get an issue in Jira Software",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "NhL1jf1O89w5Nlc3",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an issue in Jira Software": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ff67d6cb-c6b1-475f-bed4-f84678bef7a0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f153e82dd8161826d3e239e27daa6774d0b144a9b90f539b11537537e2d9d019"
+  },
+  "nodeGroups": [],
+  "id": "ynfbqLlHvgEfyjbQ",
+  "tags": []
+}
