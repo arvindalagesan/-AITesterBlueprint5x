@@ -1,0 +1,184 @@
+{
+  "name": "07_RCA_AIAgent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "962549fa-ae30-4bfc-a2b4-18088b205617",
+      "name": "When chat message received"
+    },
+    {
+      "parameters": {
+        "events": [
+          "jira:issue_updated"
+        ],
+        "additionalFields": {
+          "filter": "project = KAN AND labels = \"perform_rca\""
+        }
+      },
+      "type": "n8n-nodes-base.jiraTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        64
+      ],
+      "id": "ef669610-e110-404f-b137-3c3b41356fd5",
+      "name": "Jira Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\nPerform a Root Cause Analysis (RCA) for the following Jira issue.\n\nJira Project: AI5x (KAN)\n\nIssue Key:\n{{ $json.issue?.key ?? 'Not provided' }}\n\nIssue Summary:\n{{ $json.issue?.fields?.summary ?? 'Not provided' }}\n\nIssue Description:\n{{ JSON.stringify($json.issue?.fields?.description ?? 'Not provided') }}\n\nIssue Labels:\n{{ JSON.stringify($json.issue?.fields?.labels ?? []) }}\n\nInstructions:\n1. Analyze the reported issue.\n2. Retrieve relevant GitHub commits when useful.\n3. Identify possible causes based on available evidence.\n4. Clearly distinguish confirmed facts from hypotheses.\n5. Generate the RCA report using the System Message format.\n6. If evidence is insufficient, state \"Root cause not confirmed.\"\n7. Do not publish comments or modify Jira during this configuration test.\n",
+        "options": {
+          "systemMessage": "\n# R — Role\nYou are a Senior QA Engineer, Root Cause Analysis (RCA) Specialist, and Jira Bug Investigation Assistant.\n\nYour responsibility is to investigate software defects using available Jira information, GitHub commits, and verified application evidence.\n\n# I — Instructions\n1. Read the Jira issue supplied by the workflow.\n2. Identify the reported problem, actual result, expected result, and available evidence.\n3. Use the connected Get Latest GitHub Commits tool when relevant.\n4. Compare relevant commits with the reported defect.\n5. Identify possible root causes using evidence-based reasoning.\n6. Distinguish confirmed facts from hypotheses.\n7. Never conclude that a recent commit caused a defect without supporting evidence.\n8. Generate a structured RCA report.\n9. Recommend investigation steps, corrective actions, and regression tests.\n10. Do not change the Jira issue's priority, status, summary, or original description.\n11. Do not claim the RCA was posted to Jira unless the Jira operation confirms success.\n12. Do not publish an RCA comment until the workflow has validated the target issue and authorized publication.\n\n# C — Context\nJira Project: AI5x\nJira Project Key: KAN\nJira Site: https://arvindalagesan.atlassian.net\n\nAvailable evidence:\n- Jira issue data received from the Jira Trigger\n- GitHub commit history from the connected HTTP Request Tool\n\nSentry is not configured. Do not claim to have accessed Sentry events, application logs, or stack traces.\n\nThe configured GitHub repository may be unrelated to the application under investigation. Do not use unrelated commits to establish causation.\n\n# E — Example\nJira Issue:\nA QA user reports that valid login credentials produce an authentication error.\n\nExpected analysis:\n- Observed failure: Authentication unsuccessful.\n- Confirmed root cause: Insufficient information to determine.\n- Possible causes: Credential validation, account restrictions, or authentication configuration.\n- Confidence: Low.\n- Missing evidence: Authentication logs and relevant application code.\n- Next steps: Investigate logs and reproduce the issue with authorized test accounts.\n\nNever present a possible cause as a confirmed root cause.\n\n# P — Parameters\n- Use only verified information.\n- Do not invent application logs, stack traces, commits, or Jira issue details.\n- Clearly label hypotheses and assumptions.\n- If evidence is insufficient, state \"Root cause not confirmed.\"\n- Include evidence references where available.\n- Keep recommendations actionable and QA-focused.\n- Do not expose passwords, API tokens, or sensitive data.\n- Avoid unnecessary external API calls and excessive token consumption.\n\n# O — Output\nReturn a readable RCA report using this format:\n\nROOT CAUSE ANALYSIS REPORT\n\nJira Issue Key:\nIssue Summary:\n\n1. Problem Description\n2. Expected Behavior\n3. Actual Behavior\n4. Evidence Reviewed\n5. Root Cause Analysis\n   - Confirmed Root Cause:\n   - Possible Causes:\n   - Confidence Level:\n6. Relevant GitHub Commits\n7. Impact Assessment\n8. Recommended Corrective Actions\n9. Verification and Regression Tests\n10. Missing Evidence / Open Questions\n\nFinal RCA Status:\nCONFIRMED / HYPOTHESIS / INSUFFICIENT EVIDENCE\n\nDo not claim that the RCA is confirmed unless verified evidence supports the conclusion.\n\n# T — Tone\nProfessional, analytical, concise, and evidence-based.\nUse simple technical language suitable for QA engineers and developers.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        528,
+        48
+      ],
+      "id": "7c93e507-e714-4d90-9a44-f8eb38f620b9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        256
+      ],
+      "id": "802fcd07-e61c-46f9-9769-a2d284819dfd",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.sentryIoTool",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        272
+      ],
+      "id": "6221ec36-e6b2-4b05-9835-f7d536cf122f",
+      "name": "Get an event in Sentry.io",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "toolDescription": "\nRetrieve the latest commits from the configured GitHub repository.\n\nUse this tool during Root Cause Analysis (RCA) to examine recent code changes, commit messages, authors, timestamps, and commit references.\n\nCompare relevant commit information with the reported Jira bug and available error evidence.\n\nIdentify possible code changes that may have contributed to the issue.\n\nDo not assume that a recent commit caused the bug without supporting evidence.\n\nIf the repository is unrelated to the affected application, clearly state that its commits cannot establish the root cause.\n\nThis tool is read-only. Never modify GitHub repositories.\n",
+        "url": "https://api.github.com/repos/arvindalagesan/-AITesterBlueprint5x/commits?per_page=5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        688,
+        256
+      ],
+      "id": "36544da4-81ff-4dad-965d-3ba33b719019",
+      "name": "Get Latest GitHub Commits"
+    },
+    {
+      "parameters": {
+        "resource": "issueComment",
+        "issueKey": "=\n{{ $('Jira Trigger').first().json.issue.key }}\n",
+        "comment": "=\n{{ $json.output }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        896,
+        48
+      ],
+      "id": "e57f590b-3571-4481-96f4-d4cfc08f9aca",
+      "name": "Add a comment",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Jira Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Add a comment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an event in Sentry.io": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest GitHub Commits": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}
